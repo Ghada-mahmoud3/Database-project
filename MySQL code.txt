@@ -14,6 +14,7 @@ create table orders(id bigint auto_increment primary key ,date datetime not null
 
 create table order_product(product_id int ,order_id bigint, quantity int not null, foreign key(product_id) references product (id) on update cascade on delete restrict, foreign key(order_id) references orders(id) on update cascade on delete cascade, primary key(order_id,product_id) );
 
+**********************************************************************************************************************************************************************************
 
 INSERT INTO category (name) 
 VALUES 
@@ -45,6 +46,7 @@ INSERT INTO user (name, email, password, image_path, ext, role, room_id)
 VALUES
     ('Ghada Abd ElHady', 'ghada@gmail.com', 'password123', 'images/ghada.jpg', '1234', 'admin', 1),
     ('Nada Salah', 'nada@yahoo.com', 'password456', 'images/naad.jpg', '5678', 'user', 2);
+    ('Ahmed Ali', 'aa@yahoo.com', 'password566', 'images/aali.jpg', '5678', 'user', 2);
 
 
 INSERT INTO orders (date, status, notes, user_id, room_id)
@@ -63,9 +65,52 @@ VALUES
 
 
 
-permission
-trigger
-3 views
-function
+default permission
+**********************************************************************************************************************************************************************************
 
+//function to calculate amount price for each order
 
+delimiter $
+create function amount_for_order(order_id bigint) returns decimal(10,2) begin declare amount decimal(10,2); 
+select sum(op.quantity*p.price) into amount from order_product op join product p on op.product_id=p.id where op.order_id=order_id;
+return amount;
+end$
+delimiter ; 
+**********************************************************************************************************************************************************************************
+//function to calculate amount price for each user
+
+delimiter $
+create function amount_for_user(user_id int) returns decimal(10,2) begin declare total_amount decimal(10,2); 
+select sum(op.quantity*p.price) into total_amount from orders o join order_product op on o.id=op.order_id  join product p on op.product_id=p.id where o.user_id=user_id;
+return total_amount;
+end$
+delimiter ;
+**********************************************************************************************************************************************************************************
+//view to show amount price for each user
+
+create view user_checks as
+select user.name as Name,sum(op.quantity*p.price) as total_amount from orders o join order_product op on o.id=op.order_id join product p on op.product_id=p.id join user on o.user_id=user.id group by user.name;
+**********************************************************************************************************************************************************************************
+//view to show amount for each order
+
+create view order_checks as
+select o.date AS order_date,sum(op.quantity*p.price)as amount from order_product op join product p on op.product_id=p.id join orders o on o.id = op.order_id  group by o.id;
+**********************************************************************************************************************************************************************************
+//admin permission
+
+create user 'ghada'@'localhost' identified by '123456';
+grant all privileges on Cafeteria.* to 'ghada'@'localhost' with grant option;
+
+create user 'ahmed'@'localhost' identified by '123456';
+grant select on Cafeteria.product to 'ahmed';
+grant insert on Cafeteria.orders to 'ahmed';
+grant insert on Cafeteria.order_product to 'ahmed';
+grant select on Cafeteria.user_checks to 'ahmed';
+
+**********************************************************************************************************************************************************************************
+//trigger to reset user id in orders table to a default user("Deleted User")
+
+delimiter $
+create trigger set_default_user after delete on user for each row begin update orders set user_id=(select id from user where name='Deleted User' limit 1) where user_id=old.id;
+end$
+delimiter ;
