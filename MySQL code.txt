@@ -1,0 +1,71 @@
+create database Cafeteria;
+
+use Cafeteria;
+
+create table category (id TINYINT auto_increment primary key ,name varchar(25) not null unique );
+
+create table room (id int  auto_increment primary key, number varchar(4) unique not null );
+
+create table product (id int auto_increment primary key ,name varchar(50) not null unique, price decimal(10,2) not null,status enum('available','unavailable') not null default 'available' ,image_path varchar(255),category_id tinyint not null,foreign key(category_id) references category (id) on update cascade on delete cascade );
+
+create table user (id int auto_increment primary key ,name varchar(50) not null, email varchar(100) not null unique ,password varchar(255) not null,image_path varchar(255), ext varchar(4) not null, role enum('user','admin') not null default 'user',room_id int not null ,foreign key(room_id) references room (id) on update cascade );
+
+create table orders(id bigint auto_increment primary key ,date datetime not null ,status enum('Processing','Out for delivery','Done') not null default 'Processing' ,notes text ,user_id int ,room_id int not null ,foreign key(user_id) references user (id) on update cascade ,foreign key(room_id) references room (id) on update cascade);
+
+create table order_product(product_id int ,order_id bigint, quantity int not null, foreign key(product_id) references product (id) on update cascade on delete restrict, foreign key(order_id) references orders(id) on update cascade on delete cascade, primary key(order_id,product_id) );
+
+
+INSERT INTO category (name) 
+VALUES 
+    ('Drinks'),
+    ('Snacks'),
+    ('Meals'),
+    ('Desserts');
+
+INSERT INTO room (number)
+VALUES
+    ('2006'),
+    ('2010'),
+    ('2007'),
+    ('2008');
+
+INSERT INTO product (name, price, status, image_path, category_id) 
+VALUES
+    ('Coke', 1.50, 'available', 'images/coke.jpg', 1),
+    ('Water', 1.00, 'available', 'images/water.jpg', 1),
+    ('Chips', 2.00, 'available', 'images/chips.jpg', 2),
+    ('Burger', 5.00, 'available', 'images/burger.jpg', 3),
+    ('Chocolate Cake', 3.50, 'available', 'images/cake.jpg', 4);
+
+
+INSERT INTO user (name, email, password, ext, role, room_id)
+VALUES
+	('Deleted User', 'deleted@cafeteria.com', 'dumdum', '0000', 'user', 1);
+INSERT INTO user (name, email, password, image_path, ext, role, room_id)
+VALUES
+    ('Ghada Abd ElHady', 'ghada@gmail.com', 'password123', 'images/ghada.jpg', '1234', 'admin', 1),
+    ('Nada Salah', 'nada@yahoo.com', 'password456', 'images/naad.jpg', '5678', 'user', 2);
+
+
+INSERT INTO orders (date, status, notes, user_id, room_id)
+VALUES
+    ('2025-02-16 10:00:00', 'Processing', 'Bla Bla Bla', 1, 1),
+    ('2025-02-16 11:30:00', 'Out for delivery', 'BlaBlaBla', 2, 2);
+
+
+INSERT INTO order_product (product_id, order_id, quantity)
+VALUES
+    (1, 1, 2), 
+    (3, 1, 1), 
+    (4, 2, 1), 
+    (5, 2, 2); 
+
+
+
+
+permission
+trigger
+3 views
+function
+
+
